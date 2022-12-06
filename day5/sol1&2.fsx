@@ -50,9 +50,13 @@ inputs
 )
 
 stacks
-|> Seq.iter (fun k -> 
-    if k.Value.IsEmpty then
-        printfn " - "
-    else 
-        printfn "%A" k.Value.Head 
-)
+|> Seq.map(fun v ->  v.Value.Head)
+|> Seq.toArray
+|> printfn "%A"
+
+// |> Seq.iter (fun k -> 
+//     if k.Value.IsEmpty then
+//         printfn " - "
+//     else 
+//         printfn "%A" k.Value.Head 
+// )

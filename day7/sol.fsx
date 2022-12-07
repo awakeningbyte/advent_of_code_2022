@@ -13,7 +13,10 @@ let rec travel (lines: string list) pwd =
     | head::tail ->
         let segs = head.Split(" ")
         match segs with
-        | [|"$";"cd";"\\"|] -> travel tail ["\\" ]
+        | [|"$";"cd";"/"|] -> 
+            if not (dict.ContainsKey ["/"]) then
+                dict.Add (["/"], Seq.empty<FileType>)
+            travel tail ["/" ]
         | [|"$";"cd";".."|] -> travel tail (List.tail pwd)
         | [|"$";"cd";d|] -> 
             let f = [d; yield! pwd]
@@ -32,7 +35,7 @@ let rec travel (lines: string list) pwd =
             travel tail pwd  
     | [] -> ()
 
-travel inputs ["\\"]
+travel inputs ["/"]
 
 let mem = new Dictionary<(string list), int>()
 
@@ -48,12 +51,14 @@ let rec calSize (x: FileType) =
             |> Seq.map calSize 
             |> Seq.sum
 
+let rootSize = calSize (Dir ["/"])
+
+printfn "-- %i" (70000000 - rootSize)
 dict.Keys
 |> Seq.map(fun x ->
     calSize (Dir x)
 )
-|> Seq.filter(fun s -> s <= 100000)
-|> Seq.sum
+|> Seq.sort
+|> Seq.filter(fun s -> s > (30000000- 70000000 + rootSize))
+|> Seq.min
 |> printfn "%i"
-// printfn "%A" dict
-// calSize (Dir "e")

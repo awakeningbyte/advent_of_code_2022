@@ -4,7 +4,6 @@ let inputs=IO.File.ReadAllLines("input.txt")
 
 let height = inputs |> Array.length
 let width = inputs[0].Length
-let paddingY = [| for i in 1..height -> -1 |]
 let paddingX = -1
 
 type Point = {x: int; y: int} 
@@ -27,7 +26,7 @@ let scan  =
                     else
                         (t, acc)
                 
-                ) leftToRightResult -1
+                ) leftToRightResult paddingX
             
             rightToLeftResult ) 
 

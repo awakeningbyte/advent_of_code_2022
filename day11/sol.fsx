@@ -1,22 +1,22 @@
 open System
 open System.Collections
-let inputs=IO.File.ReadAllLines("input.txt")
+let inputs=IO.File.ReadAllLines("test.txt")
 
 type ThrowTo = 
   {
     number: int
-    item: int
+    item: bigint
   }
 
 type Monkey = 
   {
-    number: int
-    items: int list
-    test: int
+    number: int64
+    items: bigint list
+    test: int64
     pass: int
     noPass: int
     op: string * string * string
-    count: int
+    count: int64
   } 
 
   static member Default = 
@@ -30,7 +30,7 @@ type Monkey =
     count = 0
   }
 
-  member this.inspect  =
+  member this.inspect level =
     let throws2 =
       this.items 
       |> List.map(fun w ->
@@ -38,17 +38,17 @@ type Monkey =
             match this.op with
               | ("old","*", "old") -> w * w
               | ("old","+", "old") -> w + w
-              | ("old","*", n) -> w * (int n)
-              | ("old", "+", n) -> w + (int n)
+              | ("old","*", n) -> w * (bigint (int64 n))
+              | ("old", "+", n) -> w + (bigint (int64 n))
               | _ -> failwith "unknow operation"
-          let i = m / 3
-          match i % this.test with
-            | 0 ->
+          let i = m / level
+          match i % (bigint this.test) with
+            | x when x = (bigint 0) ->
               { number=this.pass; item = i }
             | _ -> 
               { number = this.noPass; item = i})
             
-    ({this with items= List.empty ; count = this.count + (List.length throws2)}, throws2)
+    ({this with items= List.empty ; count = this.count + (int64 (List.length throws2))}, throws2)
 
   static member parse (lines: string[])=
     lines
@@ -60,7 +60,7 @@ type Monkey =
         let b = h.Split(" ")
         {m with number = (int b.[1])} 
       | [|"Starting items"; starts|] ->
-        { m with items = (starts.Split(",") |> Array.map int |> Array.toList)} 
+        { m with items = (starts.Split(",") |> Array.map int |> Array.map bigint |> Array.toList)} 
       | [|"Operation"; o|] -> 
         let [|_;_;o;s;n|] = o.Trim().Split(" ")
         {m with op = (o,s, n)}
@@ -86,34 +86,42 @@ let state =
     )
   |> Map.ofArray
 
-let round state  =
+let round state (inspect_fn: Monkey -> (Monkey * list<ThrowTo>))  =
   state
-  |> Map.fold(fun (acc:Map<int,Monkey>) i (_: Monkey) ->
+  |> Map.fold(fun (acc:Map<int64,Monkey>) i (_: Monkey) ->
       let m = acc[i] 
-      let (m1,throw2) = m.inspect
+      let (m1,throw2) = (inspect_fn m)
 
       let acc2 = acc.Add (m1.number, m1)
       let tmp =
         throw2
-        |> List.fold(fun (a: Map<int,Monkey>) t ->
+        |> List.fold(fun (a: Map<int64,Monkey>) t ->
           let r = a[t.number]
           a.Add (r.number,{r with items = [yield! r.items; t.item]})
         ) acc2
-
-      // printfn "-------\n Monkey %A: \n thows: \n%A \n" m1 throw2
       tmp
     ) state 
-  // |> printfn "\n===============\n%A"
-let fnl =
+
+let fn1 =
   [1..20]
   |> List.fold(fun s _ ->
-    round s
+    round s (fun (m: Monkey) -> m.inspect 3L)
   ) state
 
-fnl
-|> Map.toList
-|> List.map(fun (_,m) -> m)
-|> List.sortByDescending(fun m -> m.count)
-|> List.take(2)
-|> List.fold(fun acc m -> acc * m.count) 1
-|> printfn "%A"
+let fn2 =
+  [1..1000]
+  |> List.fold(fun s i ->
+    printfn ". %i"i
+    round s (fun (m: Monkey) -> m.inspect 1L)
+  ) state
+
+let answer f =
+  f
+  |> Map.toList
+  |> List.map(fun (_,m) -> m)
+  |> List.sortByDescending(fun m -> m.count)
+  |> List.take(2)
+  |> List.fold(fun acc m -> acc * m.count) 1L
+
+printfn "part1: %i" (answer fn1)
+printfn "part2: %A" (answer fn2)

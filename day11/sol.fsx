@@ -5,13 +5,13 @@ let inputs=IO.File.ReadAllLines("test.txt")
 type ThrowTo = 
   {
     number: int
-    item: bigint
+    item: int64
   }
 
 type Monkey = 
   {
     number: int64
-    items: bigint list
+    items: int64 list
     test: int64
     pass: int
     noPass: int
@@ -38,12 +38,12 @@ type Monkey =
             match this.op with
               | ("old","*", "old") -> w * w
               | ("old","+", "old") -> w + w
-              | ("old","*", n) -> w * (bigint (int64 n))
-              | ("old", "+", n) -> w + (bigint (int64 n))
+              | ("old","*", n) -> w * (int64 n)
+              | ("old", "+", n) -> w + (int64 n)
               | _ -> failwith "unknow operation"
           let i = m / level
-          match i % (bigint this.test) with
-            | x when x = (bigint 0) ->
+          match i % this.test with
+            | 0L ->
               { number=this.pass; item = i }
             | _ -> 
               { number = this.noPass; item = i})
@@ -60,7 +60,7 @@ type Monkey =
         let b = h.Split(" ")
         {m with number = (int b.[1])} 
       | [|"Starting items"; starts|] ->
-        { m with items = (starts.Split(",") |> Array.map int |> Array.map bigint |> Array.toList)} 
+        { m with items = (starts.Split(",") |> Array.map int64 |> Array.toList)} 
       | [|"Operation"; o|] -> 
         let [|_;_;o;s;n|] = o.Trim().Split(" ")
         {m with op = (o,s, n)}
@@ -108,12 +108,12 @@ let fn1 =
     round s (fun (m: Monkey) -> m.inspect 3L)
   ) state
 
-let fn2 =
-  [1..1000]
-  |> List.fold(fun s i ->
-    printfn ". %i"i
-    round s (fun (m: Monkey) -> m.inspect 1L)
-  ) state
+// let fn2 =
+//   [1..1000]
+//   |> List.fold(fun s i ->
+//     printfn ". %i"i
+//     round s (fun (m: Monkey) -> m.inspect 1L)
+//   ) state
 
 let answer f =
   f
@@ -124,4 +124,4 @@ let answer f =
   |> List.fold(fun acc m -> acc * m.count) 1L
 
 printfn "part1: %i" (answer fn1)
-printfn "part2: %A" (answer fn2)
+// printfn "part2: %A" (answer fn2)

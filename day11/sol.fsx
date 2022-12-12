@@ -1,6 +1,6 @@
 open System
 open System.Collections
-let inputs=IO.File.ReadAllLines("test.txt")
+let inputs=IO.File.ReadAllLines("input.txt")
 
 type ThrowTo = 
   {
@@ -86,6 +86,12 @@ let state =
     )
   |> Map.ofArray
 
+let gcd = 
+  state
+  |> Map.fold(fun acc _ m ->
+    acc * m.test
+  ) 1L
+
 let round state (inspect_fn: Monkey -> (Monkey * list<ThrowTo>))  =
   state
   |> Map.fold(fun (acc:Map<int64,Monkey>) i (_: Monkey) ->
@@ -97,7 +103,12 @@ let round state (inspect_fn: Monkey -> (Monkey * list<ThrowTo>))  =
         throw2
         |> List.fold(fun (a: Map<int64,Monkey>) t ->
           let r = a[t.number]
-          a.Add (r.number,{r with items = [yield! r.items; t.item]})
+          let n =
+            if t.item < gcd then
+              t.item
+            else
+              t.item % gcd
+          a.Add (r.number,{r with items = [yield! r.items; n]})
         ) acc2
       tmp
     ) state 
@@ -108,12 +119,12 @@ let fn1 =
     round s (fun (m: Monkey) -> m.inspect 3L)
   ) state
 
-// let fn2 =
-//   [1..1000]
-//   |> List.fold(fun s i ->
-//     printfn ". %i"i
-//     round s (fun (m: Monkey) -> m.inspect 1L)
-//   ) state
+let fn2 =
+  [1..10000]
+  |> List.fold(fun s i ->
+    printfn ". %i"i
+    round s (fun (m: Monkey) -> m.inspect 1L)
+  ) state
 
 let answer f =
   f
@@ -124,4 +135,4 @@ let answer f =
   |> List.fold(fun acc m -> acc * m.count) 1L
 
 printfn "part1: %i" (answer fn1)
-// printfn "part2: %A" (answer fn2)
+printfn "part2: %A" (answer fn2)

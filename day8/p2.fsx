@@ -1,5 +1,4 @@
 open System
-open System.Collections.Generic
 let inputs=IO.File.ReadAllLines("input.txt")
 
 let height = inputs |> Array.length
@@ -31,7 +30,7 @@ let rotate (g: Tree[][]) =
     [| for i in 0..(width - 1) -> (width - 1 - i) |]
     |> Array.map(fun x ->
         [|0..height-1|] |> Array.map(fun y -> g.[y][x] ))
-        
+
 let trees =    
     inputs
     |> Array.map(fun x -> x.ToCharArray() )

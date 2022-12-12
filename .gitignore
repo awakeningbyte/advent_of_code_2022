@@ -1,4 +1,3 @@
-openai/
-gpt3/
 .adventofcode.session
 .fake
+.vscode

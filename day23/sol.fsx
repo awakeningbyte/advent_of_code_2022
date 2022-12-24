@@ -42,8 +42,11 @@ let ground =
   |> Array.toList
 
 let display (ground: list<Point>) =
+  let x0 = ground |> List.minBy (fun p -> p.x)
+  let x1= ground |> List.maxBy (fun p -> p.x)
   let y0 = ground |> List.minBy (fun p -> p.y)
   let y1= ground |> List.maxBy (fun p -> p.y)
+  let total = (y1.y - y0.y + 1) *( x1.x - x0.x + 1)
   ground 
   |> List.groupBy (fun g -> g.x)
   |> List.sortBy(fun (i,p) -> i)
@@ -56,19 +59,20 @@ let display (ground: list<Point>) =
         acc
       ) o
       |> String
-    printfn "%i : %A \n" i s
+    // printfn "%i : %A \n" i s
+    ()
   )
-
+  total - ground.Length
 let mem =
   ground
   |> List.map(fun p -> (p, List.empty<Point>))
   |> Map.ofList
 
-let rec round (m: Map<Point, List<Point>>)  dirs n =
+let rec round (m: Map<Point, List<Point>>)  dirs n f=
   if n = 0 then
     m
   else
-    let m2 =
+    let plan =
       m
       |> Seq.fold(fun (pm: Map<Point, list<Point>>) p ->
         let p2 =p.Key.propose m dirs
@@ -78,18 +82,30 @@ let rec round (m: Map<Point, List<Point>>)  dirs n =
         else
           pm.Add (p2, [p.Key])
       ) Map.empty
+
+    let mutable moved = false
+    let m2 =
+      plan
       |> Seq.fold(fun (pm: Map<Point,list<Point>>) p ->
         if p.Value.Length > 1 then
           p.Value
           |> Seq.fold(fun acc y -> acc.Add (y, [])) pm
         else
+          moved <- (moved || (not (p.Value.Head = p.Key)))
           pm.Add (p.Key,[])
       ) Map.empty
-    let dirs2= [|yield! dirs[3..]; yield! dirs[0..2]|]
-    round m2 dirs2 (n-1)
 
-round mem Directions 10
+    let dirs2= [|yield! dirs[3..]; yield! dirs[0..2]|]
+    
+    if (not moved)  then
+      printfn "part2 %A" f
+      round m2 dirs2 (n-1) -1
+    else
+      round m2 dirs2 (n-1) (f+1)
+
+round mem Directions 10000 1
 |> fun x ->
   display (x.Keys |> Seq.toList)
+  |> printfn "part1: %A"
 
 

@@ -5,29 +5,15 @@ let offsets =
   // [(0,-1);(1,-1);(1,0);(1,1);(0,1);(0,0)]
 let boundaryY= inputs[0].Length - 1
 let boundaryX = inputs.Length - 1
-type Point = 
-  {
-    x: int
-    y: int
-  }
+type Point = { x: int; y: int }
 
-type Node = 
-  {
-    p: Point
-    t: Char
-    cnt: int
-  }
-  member this.isWall =
-    this.t = '#'
+type Node = { p: Point; t: Char; cnt: int } member this.isWall = this.t = '#'
 
 let valley =
   inputs
   |> Array.mapi(fun i x -> 
       x.ToCharArray()
-      |> Array.mapi(fun j c ->
-        {p ={x = i; y = j}; t = c; cnt =0}
-      )
-    )
+      |> Array.mapi(fun j c -> {p ={x = i; y = j}; t = c; cnt =0}))
   |> Array.collect(fun x -> x)
 
 let start1 = valley |> Array.find(fun x -> x.t = '.')
@@ -36,20 +22,15 @@ let target1 = valley |> Array.findBack(fun x -> x.t = '.')
 let mem =
   valley
   |> Array.filter(fun x -> not (x.t = '.'))
-  |> Array.fold(fun (mp: Map<Point, List<Node>>)  node -> 
-    mp.Add (node.p, [node]) 
-  ) Map.empty
+  |> Array.fold(fun (mp: Map<Point, List<Node>>)  node -> mp.Add (node.p, [node])) Map.empty
 
 let moves (mp: Map<Point, List<Node>>)  (node: Node) =
   let { x = x0; y= y0 } = node.p
 
   offsets
-  |> List.map(fun (x,y) ->
-    {x = (x0+x); y =(y0+y)}
-  )
+  |> List.map(fun (x,y) -> { x = (x0+x); y =(y0+y) })
   |> List.filter(fun p -> 
-    ((p.x >= 0) && (p.y > 0) && (p.x <= boundaryX) && (p.y < boundaryY))
-  )
+    ((p.x >= 0) && (p.y > 0) && (p.x <= boundaryX) && (p.y < boundaryY)))
   |> List.filter(fun p -> not (mp.ContainsKey p))
   |> List.map(fun p -> {p = p; t='m'; cnt=node.cnt+1})
 
@@ -75,9 +56,9 @@ let  update (m: Map<Point, List<Node>>)  =
     | _ -> 
       nodes
       |> List.fold(fun m2 n2 -> 
-        blow m m2 n2
-      ) mp
+        blow m m2 n2) mp
    ) Map.empty
+   
 let display (m: Map<Point,List<Node>>) =
   Seq.allPairs [0..boundaryX] [0..boundaryY]
   |> Seq.map (fun (x,y) -> {x =x; y=y})
@@ -88,7 +69,6 @@ let display (m: Map<Point,List<Node>>) =
     points
     |> Seq.fold(fun (acc: string[]) p -> 
       if m.ContainsKey p then
-        // printfn "countains"
         let nodes = m[p]
         match nodes with
         | [n] -> 

@@ -1,7 +1,7 @@
 open System
 open System.Text.RegularExpressions
 open System.Collections.Generic
-let inputs=IO.File.ReadAllLines("inputs.txt")
+let inputs=IO.File.ReadAllLines("input.txt")
 
 type Valve = 
   {
@@ -28,11 +28,19 @@ let room =
   |> Map.ofSeq
 // |> printfn "%A"
 
+let full =
+  room.Values
+  |> Seq.filter(fun v -> v.rate = 0)
+  |> Seq.fold(fun acc v -> 
+    let idx = 1 <<< v.id
+    acc ||| idx
+  ) 0
+  
 let opens = 0L
 let mem = new Dictionary<(string * int * int64), int>()
 
 let rec maxflow (s: string) (opens: int64) (timer: int): int =
-  if timer <= 0 then
+  if timer <= 0 || opens = full then
     0
   else
   let key = (s, timer, opens)

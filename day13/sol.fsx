@@ -14,7 +14,6 @@ let rec parse (s:list<char>) (stack: list<Pair>) (cur: Option<Pair>) (buff: list
     | Some(p) -> 
       parse tail [p;yield! stack;] (Some({items=list.Empty; closed=false})) list.Empty
     | None -> parse tail stack (Some({items=list.Empty; closed=false})) list.Empty
-      //parse tail [yield! acc; "["] List.empty
   | ']'::tail ->
     let p = 
       if buff.IsEmpty then 
@@ -34,11 +33,20 @@ let rec parse (s:list<char>) (stack: list<Pair>) (cur: Option<Pair>) (buff: list
   | c::tail -> 
       parse tail stack cur [yield! buff; c]
 
+let compare [|l;r|] =
+  
+  0
+
 inputs
 |> Seq.filter(fun line -> line.Length > 0)
 |> Seq.map(fun x ->
    parse (x.ToCharArray() |> Array.toList) list.Empty None list.Empty)
 |> Seq.map(fun x -> x.items)
 |> Seq.chunkBySize(2)
-|> Seq.iteri(fun i x -> printfn "%i\n%A\n" (i + 1) x)
-|> ignore
+|> Seq.mapi(fun i x -> 
+    let v = compare x
+    printfn "%i\n%A\n" (i + 1) v
+    v
+  )
+|> Seq.sum
+|> printfn "%i"

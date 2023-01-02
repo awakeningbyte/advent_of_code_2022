@@ -1,7 +1,7 @@
 open System
 open System.Text.RegularExpressions
 open System.Collections.Generic
-let inputs=IO.File.ReadAllLines("input.txt")
+let inputs=IO.File.ReadAllLines("test.txt")
 
 type Valve = 
   {
@@ -9,7 +9,6 @@ type Valve =
     name: string
     rate: int
     links: string list
-    // opened: bool
   }
 
 let rex = Regex(@"Valve (\w+) has flow rate=(\d+); tunnel(?:s)? lead(?:s)? to valve(?:s)? (.+)")
@@ -30,17 +29,18 @@ let room =
 
 let full =
   room.Values
-  |> Seq.filter(fun v -> v.rate = 0)
+  |> Seq.filter(fun v -> not (v.rate = 0))
   |> Seq.fold(fun acc v -> 
-    let idx = 1 <<< v.id
+    let idx = 1L <<< v.id
     acc ||| idx
-  ) 0
-  
+  ) 0L
+
 let opens = 0L
 let mem = new Dictionary<(string * int * int64), int>()
 
 let rec maxflow (s: string) (opens: int64) (timer: int): int =
   if timer <= 0 || opens = full then
+    printfn "final s: %A timer: %A opens: %A" s timer opens
     0
   else
   let key = (s, timer, opens)
@@ -75,7 +75,8 @@ let rec maxflow (s: string) (opens: int64) (timer: int): int =
         |> List.max
       
       mem[key] <- if rt1 > rt2 then rt1 else rt2
+      if timer = 30 then
+        printfn "%A" mem[key] 
+        printfn "%A" ((maxflow "AA" 0 26) + mem[key] )
+      
       mem[key]
-
-(maxflow "AA" 0 30)
-|> printfn "%A"
